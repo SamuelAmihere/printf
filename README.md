@@ -1,1 +1,3 @@
-# Welcome to a printf  project in C\nA repo created to create printf function, similar to the one in C 
+# Welcome to a printf  project in C
+A to create printf function, similar to the one in C.
+Collaborator: [Wilfred Kotey](https://github.com/niikotey)
