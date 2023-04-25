@@ -35,7 +35,7 @@
 
 /* print_string -  CONDITIONALS*/
 #define IS_NULL_STRING(str) (str == NULL)
-#define HAS_PRECISION(precision) (precision >= 0 && precision < length)
+#define HAS_PRECISION(prec, len) ((prec) >= 0 && (prec) < (len))
 #define NEED_PADDING_W(width, length) (width > length)
 
 /* FLAGS */
@@ -130,7 +130,8 @@ int write_number(int is_positive, int ind, char buffer[],
 		int flags, int width, int precision, int size);
 int write_num(int idx, char buffer[], int flags, int width, int precision,
 		int len, char padd, char extra_char);
-int write_buffer(char buffer[], int start, int len, *int flags, char padd);
+int write_buffer(char buffer[], int width,  int start, int len,
+		int flags, char padd);
 int write_pointer(char buffer[], int idx, int len,
 	int width, int flags, char padd, char extra_c, int padd_start);
 

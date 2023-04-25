@@ -29,14 +29,14 @@ int print_string(va_list args, char buffer[], int flags, int width,
 	if (IS_NULL_STRING(str))
 	{
 		str = "(null)";
-		if (HAS_PRECISION(precision))
+		if (HAS_PRECISION(precision, len))
 			str = "      ";
 	}
 
 	while (str[len] != '\0')
 		len++;
 
-	if (HAS_PRECISION(precision))
+	if (HAS_PRECISION(precision, len))
 		len = precision;
 
 	if (NEED_PADDING_W(width, len))
@@ -128,7 +128,7 @@ int print_percent(va_list args, char buffer[], int flags,
 int print_int(va_list args, char buffer[], int flags, int width,
 		int precision, int size)
 {
-	int negative = 0, int i = BUFF_SIZE - 2;
+	int negative = 0, i = BUFF_SIZE - 2;
 	unsigned long int n;
 	long int num = va_arg(args, long int);
 
@@ -207,7 +207,7 @@ int print_binary(va_list args, char buffer[], int flags, int width,
 			write(1, &z, 1);
 			count++;
 		}
-		i++
+		i++;
 	}
 
 	return (count);

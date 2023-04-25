@@ -76,7 +76,7 @@ int print_unsigned(va_list args, char buffer[], int flags,
 int print_octal(va_list args, char buffer[], int flags, int width,
 		int precision, int size)
 {
-	unsigned long int num, unsigned long int num1;
+	unsigned long int num, num1;
 	int i = BUFF_SIZE - 2;
 
 	num = va_arg(args, unsigned long int);

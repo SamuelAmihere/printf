@@ -15,6 +15,7 @@ int handle_write_char(char c, char buffer[],
 		int flags, int width, int precision, int size)
 {
 	int i = 0;
+	char padding_char;
 	/* Unused parameters */
 	UNUSED(precision);
 	UNUSED(size);
@@ -45,6 +46,43 @@ int handle_write_char(char c, char buffer[],
 
 	return (write(1, &buffer[0], 1));
 }
+
+/*---------------------------Number-----------------------*/
+/**
+ * write_number: Prints a number
+ *
+ * @is_negative: args
+ * @ind: char types.
+ * @buffer: Buffer array to handle print
+ * @flags:  Calculates active flags
+ * @width: get width.
+ * @precision: precision specifier
+ * @size: Size specifier
+ *
+ * Return: Number of chars printed.
+ */
+int write_number(int is_negative, int ind, char buffer[],
+		int flags, int width, int precision, int size)
+{
+	char padd = ' ', extra_ch = 0;
+	int len = BUFF_SIZE - ind - 1;
+
+	UNUSED(size);
+
+	if ((flags & F_ZERO) && !(flags & F_MINUS))
+		padd = '0';
+	if (is_negative)
+		extra_ch = '-';
+	else if (flags & F_PLUS)
+		extra_ch = '+';
+	else if (flags & F_SPACE)
+		extra_ch = ' ';
+
+	return (write_num(ind, buffer, flags, width, precision,
+				len, padd, extra_ch));
+}
+
+/*----------------------------- num ------------------------*/
 
 /**
  * write_num - Writes a number
@@ -89,7 +127,7 @@ int write_num(int idx, char buffer[], int flags, int width, int precision,
 	if (NEED_EXTRA_CHAR(extra_char))
 		buffer[--idx] = extra_char;
 
-	return (write_buffer(buffer, idx, len, flags, padd));
+	return (write_buffer(buffer, width, padd_start, len, flags, padd));
 
 }
 
@@ -98,6 +136,7 @@ int write_num(int idx, char buffer[], int flags, int width, int precision,
  * write_buffer - Writes the contents of the buffer to stdout.
  *
  * @buffer: The buffer containing the data to write.
+ * @width: The width specifier for the number
  * @start: The index of the first character in the buffer to write.
  * @len: The number of characters in the buffer to write.
  * @flags: The formatting flags to apply.
@@ -105,7 +144,8 @@ int write_num(int idx, char buffer[], int flags, int width, int precision,
  *
  * Return: The number of characters written.
  */
-int write_buffer(char buffer[], int start, int len, int flags, char padd)
+int write_buffer(char buffer[], int width,  int start, int len,
+		int flags, char padd)
 {
 	int written = 0;
 
@@ -142,7 +182,7 @@ int write_unsgnd(int is_negative_flag, int idx, char buffer[],
 		int flags, int width, int precision, int size)
 {
 	int i = 0, len = BUFF_SIZE - idx - 1;
-	char pad = IS_ZERO_PADDING(flags) ? '0' : ' ';
+	char padd = IS_ZERO_PADDING(flags) ? '0' : ' ';
 
 	UNUSED(size);
 	UNUSED(is_negative_flag);
@@ -193,7 +233,7 @@ int write_pointer(char buffer[], int idx, int len, int width, int flags,
 {
 	int i;
 
-	if (IS_WIDTH_GT_LENGTH)
+	if (IS_WIDTH_GT_LENGTH(width, len))
 	{
 		for (i = 3; i < width - len + 3; i++)
 			buffer[i] = padd;
