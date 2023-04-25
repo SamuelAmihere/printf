@@ -33,6 +33,11 @@
 #define IS_FLAG_ZERO(flags) ((flags) & F_ZERO)
 #define IS_VALID_EXTRA_CHAR(c) ((c) != '\0')
 
+/* print_string -  CONDITIONALS*/
+#define IS_NULL_STRING(str) (str == NULL)
+#define HAS_PRECISION(precision) (precision >= 0 && precision < length)
+#define NEED_PADDING_W(width, length) (width > length)
+
 /* FLAGS */
 #define F_MINUS 1
 #define F_PLUS 2
