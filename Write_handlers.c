@@ -15,6 +15,7 @@ int handle_write_char(char c, char buffer[],
 		int flags, int width, int precision, int size)
 {
 	int i = 0;
+	char padding_char;
 	/* Unused parameters */
 	UNUSED(precision);
 	UNUSED(size);
@@ -46,62 +47,105 @@ int handle_write_char(char c, char buffer[],
 	return (write(1, &buffer[0], 1));
 }
 
+/*---------------------------Number-----------------------*/
 /**
- * write_num - Writes a number to a buffer array
+ * write_number: Prints a number
  *
- * @is_negative: Whether the number is negative (1) or not (0)
- * @buffer_index: The index of the buffer array to write to
+ * @is_negative: args
+ * @ind: char types.
+ * @buffer: Buffer array to handle print
+ * @flags:  Calculates active flags
+ * @width: get width.
+ * @precision: precision specifier
+ * @size: Size specifier
+ *
+ * Return: Number of chars printed.
+ */
+int write_number(int is_negative, int ind, char buffer[],
+		int flags, int width, int precision, int size)
+{
+	char padd = ' ', extra_ch = 0;
+	int len = BUFF_SIZE - ind - 1;
+
+	UNUSED(size);
+
+	if ((flags & F_ZERO) && !(flags & F_MINUS))
+		padd = '0';
+	if (is_negative)
+		extra_ch = '-';
+	else if (flags & F_PLUS)
+		extra_ch = '+';
+	else if (flags & F_SPACE)
+		extra_ch = ' ';
+
+	return (write_num(ind, buffer, flags, width, precision,
+				len, padd, extra_ch));
+}
+
+/*----------------------------- num ------------------------*/
+
+/**
+ * write_num - Writes a number
+ *
+ * @idx: starting index of the number in buffer
  * @buffer: The buffer array to write the number to
  * @flags: The active flags for formatting the number
  * @width: The width specifier for the number
  * @precision: The precision specifier for the number
- * @size: The size specifier for the number
+ * @len: Length of number
+ * @padd: A padding character
+ * @extra_char: Extra character
+ *
  * Return: The number of characters written
  */
-int write_num(int is_negative, int buffer_index, char buffer[],
-		int flags, int width, int precision, int size)
+int write_num(int idx, char buffer[], int flags, int width, int precision,
+		int len, char padd, char extra_char)
 {
 	int i, padd_start = 1;
 
-	if (IS_ZERO_PREC_IND_WIDTH(prec, ind, width))
+	if (IS_ZERO_PREC_IND_WIDTH(precision, idx, width))
 		return (0);
 
-	if (IS_ZERO_PREC_IND(prec, ind))
-		buffer[ind] = padd = ' ';
-	if (NEED_PADDING(prec, length))
+	if (IS_ZERO_PREC_IND(precision, idx))
+		buffer[idx] = padd = ' ';
+	if (NEED_PADDING(precision, len))
 	{
-		while (prec > length)
-			buffer[--ind] = '0', length++;
+		while (precision > len)
+			buffer[--idx] = '0', len++;
 	}
 
-	if (NEED_EXTRA_CHAR(extra_c))
-		length++;
+	if (NEED_EXTRA_CHAR(extra_char))
+		len++;
 
-	if (NEED_WIDTH_PADDING(width, length))
+	if (NEED_WIDTH_PADDING(width, len))
 	{
-		for (i = 1; i < width - length + 1; i++)
+		for (i = 1; i < width - len + 1; i++)
 			buffer[i] = padd;
 		buffer[i] = '\0';
 	}
 
-	if (NEED_EXTRA_CHAR(extra_c))
-		buffer[--ind] = extra_c;
+	if (NEED_EXTRA_CHAR(extra_char))
+		buffer[--idx] = extra_char;
 
-	return (write_buffer(buffer, ind, length, flags, padd));
+	return (write_buffer(buffer, width, padd_start, len, flags, padd));
 
 }
 
 
 /**
  * write_buffer - Writes the contents of the buffer to stdout.
+ *
  * @buffer: The buffer containing the data to write.
+ * @width: The width specifier for the number
  * @start: The index of the first character in the buffer to write.
  * @len: The number of characters in the buffer to write.
  * @flags: The formatting flags to apply.
  * @padd: The padding character to use.
+ *
  * Return: The number of characters written.
  */
-int write_buffer(char buffer[], int start, int len, int flags, char padd)
+int write_buffer(char buffer[], int width,  int start, int len,
+		int flags, char padd)
 {
 	int written = 0;
 
@@ -121,17 +165,101 @@ int write_buffer(char buffer[], int start, int len, int flags, char padd)
 	return (written);
 }
 
-/** TO DO
- * 1. Add protopyte: int write_buffer(char buffer[], int start, int len,
- * int flags, char padd) to the [main.h] (---width handler----)
+/**
+ * write_unsgnd - writes unsigned number
  *
- * 2. Add conditional macros used by write_num function in [main.h]. Get them
- * at CGPT.
+ * @is_negative_flag: Flag indicating if the number is negative
+ * @idx: Index at which the number starts in the buffer
+ * @buffer: Array of characters
+ * @flags: Flags specifiers
+ * @width: Width specifier
+ * @precision: Precision specifier
+ * @size: Size specifier
  *
- * 3. Add int write_unsgnd(int is_negative, int ind,char buffer[], int flags,
- * int width, int precision, int size) [here].
- *
- * 4. Add int write_pointer(char buffer[], int ind, int length,int width,
- * int flags, char padd, char extra_c, int padd_start) [here].
- * Return: nothing
+ * Return: Number of characters written
  */
+int write_unsgnd(int is_negative_flag, int idx, char buffer[],
+		int flags, int width, int precision, int size)
+{
+	int i = 0, len = BUFF_SIZE - idx - 1;
+	char padd = IS_ZERO_PADDING(flags) ? '0' : ' ';
+
+	UNUSED(size);
+	UNUSED(is_negative_flag);
+
+	if (IS_ZERO_PRECISION(precision, idx, buffer))
+		return (0);
+	while (IS_PRECISION_GT_LENGTH(precision, len))
+	{
+		buffer[--idx] = '0';
+		len++;
+	}
+
+	if (IS_WIDTH_GT_LENGTH(width, len))
+	{
+		for (i = 0; i < width - len; i++)
+			buffer[i] = padd;
+
+		buffer[i] = '\0';
+
+		if (IS_FLAG_SET(flags, F_MINUS))
+			return (write(1, &buffer[idx], len) + write(1,
+						&buffer[0], i));
+		else
+			return (write(1, &buffer[0], i) + write(1, &buffer[idx],
+						len));
+	}
+
+	return (write(1, &buffer[idx], len));
+
+}
+
+/**
+ * write_pointer - Write a memory address of pointer
+ *
+ * @buffer: Arrays of chars
+ * @idx: Index at which the number starts in the buffer
+ * @len: Length of number
+ * @width: Width specifier
+ * @flags: Flags specifier
+ * @padd: Char representing the padding
+ * @extra_c: Char representing extra char
+ * @padd_start: Index at which padding should start
+ *
+ * Return: Number of written chars.
+ */
+int write_pointer(char buffer[], int idx, int len, int width, int flags,
+		char padd, char extra_c, int padd_start)
+{
+	int i;
+
+	if (IS_WIDTH_GT_LENGTH(width, len))
+	{
+		for (i = 3; i < width - len + 3; i++)
+			buffer[i] = padd;
+		buffer[i] = '\0';
+		if (IS_FLAG_MINUS(flags) && padd == ' ')
+		{
+			buffer[--idx] = 'x';
+			buffer[--idx] = '0';
+			if (IS_VALID_EXTRA_CHAR(extra_c))
+				buffer[--idx] = extra_c;
+			return (write(1, &buffer[idx], len) + write(1, &buffer[3],
+						i - 3));
+		} else if (!IS_FLAG_MINUS(flags) && padd == '0')
+		{
+			if (IS_VALID_EXTRA_CHAR(extra_c))
+				buffer[--padd_start] = extra_c;
+			buffer[1] = '0';
+			buffer[2] = 'x';
+			return (write(1, &buffer[padd_start], i - padd_start) +
+					write(1, &buffer[idx], len - (1 -
+							padd_start) - 2));
+		}
+	}
+	buffer[--idx] = 'x';
+	buffer[--idx] = '0';
+	if (IS_VALID_EXTRA_CHAR(extra_c))
+		buffer[--idx] = extra_c;
+	return (write(1, &buffer[idx], BUFF_SIZE - idx - 1));
+}
